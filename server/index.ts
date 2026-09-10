@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { handleDemo } from "./routes/demo";
+import { handleDemo } from "./routes/demo.ts";
 import {
   adjustBalance,
   confirmDeposit,
@@ -12,7 +12,7 @@ import {
   getDeposits,
   getTransactions,
   isAdmin,
-} from "./routes/wallet";
+} from "./routes/wallet.ts";
 
 export function createServer() {
   const app = express();

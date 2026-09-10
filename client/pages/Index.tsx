@@ -24,9 +24,9 @@ import type { BalanceResponse, Deposit, DepositMethod, Transaction, User } from 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import KovaLanding from "./KovaLanding";
+import KovaLanding from "./KovaLanding.tsx";
 import { supabase } from "@/lib/supabase";
-import SettingsPage from "./SettingsPage";
+import SettingsPage from "./SettingsPage.tsx";
 import PinAuthModal from "@/components/PinAuthModal";
 
 const money = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
