@@ -63,7 +63,14 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
           setMessage("Please enter your full name.");
           return;
         }
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name.trim() } } });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name.trim() },
+            emailRedirectTo: window.location.origin,
+          },
+        });
         if (error) throw error;
         if (!data.session) {
           setMode("login");
