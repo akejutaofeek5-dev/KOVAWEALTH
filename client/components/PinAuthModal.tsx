@@ -18,6 +18,30 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
   const [confirmPasscode, setConfirmPasscode] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const resendVerificationEmail = async () => {
+    if (!email) {
+      setMessage("Enter your email address first.");
+      return;
+    }
+    setResendLoading(true);
+    setMessage("");
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      setMessage("A new KovaWealthpro verification email has been sent. Check your inbox and spam folder.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to resend the verification email.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const savePasscode = async () => {
     if (!/^\d{6}$/.test(passcode)) {
@@ -73,7 +97,7 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
         });
         if (error) throw error;
         if (!data.session) {
-          setMode("login");
+          setVerificationPending(true);
           setMessage("Account created. Verify your email, then sign in with your password to create your passcode.");
         } else {
           setStage("setup");
@@ -95,5 +119,5 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
   const title = stage === "setup" ? "Secure your account" : stage === "verify" ? "Enter your passcode" : mode === "signup" ? "Create your account" : "Welcome back";
   const description = stage === "setup" ? "Create a separate 6-digit passcode for extra account security." : stage === "verify" ? "Enter your passcode after your password to open your wallet." : mode === "signup" ? "Create your account with an email and password." : "Sign in with your email and password.";
 
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"><Card className="w-full max-w-md border-white/10 bg-[#17142c] p-7 shadow-[0_20px_70px_rgba(141,128,217,.18)]"><div className="flex items-start justify-between"><div><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8d80d9] text-slate-950"><LockKeyhole className="h-5 w-5" /></div><h2 className="mt-5 text-2xl font-semibold text-white">{title}</h2><p className="mt-1 text-sm text-slate-400">{description}</p></div><button type="button" onClick={onClose} aria-label="Close authentication" className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button></div><form onSubmit={submit} className="mt-6 space-y-4">{stage === "auth" && mode === "signup" && <label className="block text-sm text-slate-300">Full name<Input required value={name} onChange={event => setName(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label>}{stage === "auth" && <><label className="block text-sm text-slate-300">Email address<Input required type="email" value={email} onChange={event => setEmail(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label><label className="block text-sm text-slate-300">Password<Input required minLength={8} type="password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label></>}{stage === "setup" && <><label className="block text-sm text-slate-300">New 6-digit passcode<Input required inputMode="numeric" maxLength={6} type="password" value={passcode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label><label className="block text-sm text-slate-300">Confirm passcode<Input required inputMode="numeric" maxLength={6} type="password" value={confirmPasscode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setConfirmPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label></>}{stage === "verify" && <label className="block text-sm text-slate-300">6-digit passcode<Input required inputMode="numeric" maxLength={6} type="password" value={passcode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label>}{message && <p className="text-sm text-amber-300">{message}</p>}<Button disabled={loading} className="h-11 w-full bg-[#8d80d9] font-semibold text-white hover:bg-[#a79be7]">{loading ? "Please wait..." : stage === "setup" ? "Save passcode" : stage === "verify" ? "Unlock wallet" : mode === "signup" ? "Create account" : "Continue"}</Button></form>{stage === "auth" && <p className="mt-5 text-center text-sm text-slate-500">{mode === "signup" ? "Already have an account?" : "New to KovaWealth?"} <button type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setMessage(""); }} className="font-medium text-[#a79be7]">{mode === "signup" ? "Sign in" : "Create an account"}</button></p>}</Card></div>;
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"><Card className="w-full max-w-md border-white/10 bg-[#17142c] p-7 shadow-[0_20px_70px_rgba(141,128,217,.18)]"><div className="flex items-start justify-between"><div><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8d80d9] text-slate-950"><LockKeyhole className="h-5 w-5" /></div><h2 className="mt-5 text-2xl font-semibold text-white">{title}</h2><p className="mt-1 text-sm text-slate-400">{description}</p></div><button type="button" onClick={onClose} aria-label="Close authentication" className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button></div><form onSubmit={submit} className="mt-6 space-y-4">{stage === "auth" && mode === "signup" && <label className="block text-sm text-slate-300">Full name<Input required value={name} onChange={event => setName(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label>}{stage === "auth" && <><label className="block text-sm text-slate-300">Email address<Input required type="email" value={email} onChange={event => setEmail(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label><label className="block text-sm text-slate-300">Password<Input required minLength={8} type="password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label></>}{stage === "setup" && <><label className="block text-sm text-slate-300">New 6-digit passcode<Input required inputMode="numeric" maxLength={6} type="password" value={passcode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label><label className="block text-sm text-slate-300">Confirm passcode<Input required inputMode="numeric" maxLength={6} type="password" value={confirmPasscode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setConfirmPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label></>}{stage === "verify" && <label className="block text-sm text-slate-300">6-digit passcode<Input required inputMode="numeric" maxLength={6} type="password" value={passcode} onChange={event => /^\d{0,6}$/.test(event.target.value) && setPasscode(event.target.value)} className="mt-2 h-11 border-slate-700 bg-slate-900 text-white" /></label>}{message && <p className="text-sm text-amber-300">{message}</p>}{verificationPending && stage === "auth" && <button type="button" onClick={resendVerificationEmail} disabled={resendLoading} className="w-full text-sm font-medium text-[#a79be7] hover:text-white disabled:opacity-60">{resendLoading ? "Sending verification email..." : "Resend verification email"}</button>}<Button disabled={loading} className="h-11 w-full bg-[#8d80d9] font-semibold text-white hover:bg-[#a79be7]">{loading ? "Please wait..." : stage === "setup" ? "Save passcode" : stage === "verify" ? "Unlock wallet" : mode === "signup" ? "Create account" : "Continue"}</Button></form>{stage === "auth" && <p className="mt-5 text-center text-sm text-slate-500">{mode === "signup" ? "Already have an account?" : "New to KovaWealth?"} <button type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setVerificationPending(false); setMessage(""); }} className="font-medium text-[#a79be7]">{mode === "signup" ? "Sign in" : "Create an account"}</button></p>}</Card></div>;
 }
