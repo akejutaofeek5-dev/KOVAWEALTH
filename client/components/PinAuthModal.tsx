@@ -94,22 +94,21 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
           setMessage("Please enter your full name.");
           return;
         }
-        const response = await fetch(`${BACKEND_URL}/api/public/auth/signup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            password,
-            fullName: name.trim(),
-            redirectTo: "https://www.kovawealthpro.com/email-confirmed",
-          }),
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name.trim() },
+            emailRedirectTo: "https://www.kovawealthpro.com/email-confirmed",
+          },
         });
-        const result = (await response.json()) as { success?: boolean; error?: string };
-        if (!response.ok || result.success !== true) {
-          throw new Error(result.error || "Unable to create account.");
+        if (error) throw error;
+        if (!data.session) {
+          setVerificationPending(true);
+          setMessage("Account created. Check your email to verify your account, then sign in.");
+        } else {
+          setStage("setup");
         }
-        setVerificationPending(true);
-        setMessage("Account created. Check your KovaWealthpro email to verify your account, then sign in.");
         return;
       }
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
