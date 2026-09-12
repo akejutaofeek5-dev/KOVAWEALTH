@@ -92,11 +92,17 @@ export default function Index() {
 
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
-    const isEmailConfirmation = search.get("type") === "signup" || window.location.hash.includes("access_token=");
+    const isEmailConfirmation =
+      search.has("code") ||
+      search.has("token_hash") ||
+      search.get("type") === "signup" ||
+      window.location.hash.includes("access_token=") ||
+      window.location.hash.includes("type=signup");
 
     if (isEmailConfirmation) {
-      void supabase.auth.signOut();
-      window.history.replaceState({}, document.title, window.location.pathname);
+      void supabase.auth.signOut().finally(() => {
+        window.location.replace("https://www.kovawealthpro.com/");
+      });
       return;
     }
 
