@@ -93,6 +93,7 @@ export default function Index() {
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
     const isEmailConfirmation =
+      window.location.pathname === "/email-confirmed" ||
       search.has("code") ||
       search.has("token_hash") ||
       search.get("type") === "signup" ||

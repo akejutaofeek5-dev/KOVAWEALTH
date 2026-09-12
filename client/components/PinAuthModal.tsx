@@ -32,7 +32,7 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
-        options: { emailRedirectTo: "https://www.kovawealthpro.com" },
+        options: { emailRedirectTo: "https://www.kovawealthpro.com/email-confirmed" },
       });
       if (error) throw error;
       setMessage("A new KovaWealthpro verification email has been sent. Check your inbox and spam folder.");
@@ -92,7 +92,7 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
           password,
           options: {
             data: { full_name: name.trim() },
-            emailRedirectTo: "https://www.kovawealthpro.com",
+            emailRedirectTo: "https://www.kovawealthpro.com/email-confirmed",
           },
         });
         if (error) throw error;
