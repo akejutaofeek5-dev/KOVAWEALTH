@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { hashPasscode } from "@/lib/passcode";
 
 type Stage = "auth" | "setup" | "verify";
+const BACKEND_URL = "https://wallet-guard-backend.vercel.app";
 
 export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [mode, setMode] = useState<"signup" | "login">("signup");
@@ -29,12 +30,18 @@ export default function PinAuthModal({ onClose, onSuccess }: { onClose: () => vo
     setResendLoading(true);
     setMessage("");
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: { emailRedirectTo: "https://www.kovawealthpro.com/email-confirmed" },
+      const response = await fetch(`${BACKEND_URL}/api/public/auth/send-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          redirectTo: "https://www.kovawealthpro.com/email-confirmed",
+        }),
       });
-      if (error) throw error;
+      const result = (await response.json()) as { success?: boolean; error?: string };
+      if (!response.ok || result.success !== true) {
+        throw new Error(result.error || "Unable to resend the verification email.");
+      }
       setMessage("A new KovaWealthpro verification email has been sent. Check your inbox and spam folder.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to resend the verification email.");
